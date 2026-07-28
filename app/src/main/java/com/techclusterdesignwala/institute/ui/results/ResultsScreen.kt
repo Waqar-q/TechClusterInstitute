@@ -17,7 +17,10 @@ import com.techclusterdesignwala.institute.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ResultsScreen(viewModel: ResultsViewModel = hiltViewModel()) {
+fun ResultsScreen(
+    userId: Long = 0,
+    viewModel: ResultsViewModel = hiltViewModel()
+) {
     val state by viewModel.uiState.collectAsState()
 
     Scaffold(

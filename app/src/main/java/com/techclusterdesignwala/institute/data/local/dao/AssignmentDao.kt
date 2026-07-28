@@ -9,6 +9,9 @@ interface AssignmentDao {
     @Query("SELECT * FROM assignments ORDER BY dueDate ASC")
     fun getAll(): Flow<List<AssignmentEntity>>
 
+    @Query("SELECT * FROM assignments WHERE batchId = :batchId ORDER BY dueDate ASC")
+    fun getByBatch(batchId: Long): Flow<List<AssignmentEntity>>
+
     @Query("SELECT * FROM assignments WHERE status = :status ORDER BY dueDate ASC")
     fun getByStatus(status: String): Flow<List<AssignmentEntity>>
 

@@ -23,6 +23,8 @@ import java.util.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AssignmentListScreen(
+    userId: Long = 0,
+    userRole: String = "",
     onAssignmentClick: (Long) -> Unit = {},
     viewModel: AssignmentViewModel = hiltViewModel()
 ) {

@@ -3,10 +3,10 @@ package com.techclusterdesignwala.institute.data.local.entity
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "attendance")
-data class AttendanceEntity(
+@Entity(tableName = "software")
+data class SoftwareEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
-    val enrollmentId: Long,
-    val date: Long,
-    val status: String
+    val name: String,
+    val description: String = "",
+    val durationHours: Int = 40
 )

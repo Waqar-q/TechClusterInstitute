@@ -6,29 +6,17 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface AttendanceDao {
-    @Query("SELECT * FROM attendance WHERE studentId = :studentId ORDER BY date DESC")
-    fun getByStudentId(studentId: Long): Flow<List<AttendanceEntity>>
+    @Query("SELECT a.* FROM attendance a INNER JOIN enrollments e ON a.enrollmentId = e.id WHERE e.studentId = :studentId ORDER BY a.date DESC")
+    fun getByStudent(studentId: Long): Flow<List<AttendanceEntity>>
 
-    @Query("SELECT * FROM attendance WHERE studentId = :studentId AND subject = :subject")
-    fun getByStudentAndSubject(studentId: Long, subject: String): Flow<List<AttendanceEntity>>
+    @Query("SELECT a.* FROM attendance a INNER JOIN enrollments e ON a.enrollmentId = e.id WHERE e.batchId = :batchId ORDER BY a.date DESC")
+    fun getByBatch(batchId: Long): Flow<List<AttendanceEntity>>
+
+    @Query("SELECT * FROM attendance WHERE enrollmentId = :enrollmentId AND date = :date")
+    suspend fun getByEnrollmentAndDate(enrollmentId: Long, date: Long): AttendanceEntity?
 
     @Query("SELECT * FROM attendance WHERE date BETWEEN :startDate AND :endDate")
     fun getByDateRange(startDate: Long, endDate: Long): Flow<List<AttendanceEntity>>
-
-    @Query("SELECT * FROM attendance WHERE studentId = :studentId AND date BETWEEN :startDate AND :endDate")
-    fun getByStudentAndDateRange(studentId: Long, startDate: Long, endDate: Long): Flow<List<AttendanceEntity>>
-
-    @Query("SELECT COUNT(*) FROM attendance WHERE studentId = :studentId AND status = 'PRESENT'")
-    fun getPresentCount(studentId: Long): Flow<Int>
-
-    @Query("SELECT COUNT(*) FROM attendance WHERE studentId = :studentId")
-    fun getTotalCount(studentId: Long): Flow<Int>
-
-    @Query("SELECT COUNT(*) FROM attendance WHERE studentId = :studentId AND status = 'PRESENT' AND subject = :subject")
-    fun getPresentCountBySubject(studentId: Long, subject: String): Flow<Int>
-
-    @Query("SELECT COUNT(*) FROM attendance WHERE studentId = :studentId AND subject = :subject")
-    fun getTotalCountBySubject(studentId: Long, subject: String): Flow<Int>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(attendance: AttendanceEntity): Long
@@ -41,7 +29,4 @@ interface AttendanceDao {
 
     @Query("DELETE FROM attendance WHERE id = :id")
     suspend fun delete(id: Long)
-
-    @Query("SELECT DISTINCT subject FROM attendance WHERE studentId = :studentId")
-    fun getDistinctSubjects(studentId: Long): Flow<List<String>>
 }

@@ -9,28 +9,30 @@ import com.techclusterdesignwala.institute.data.local.entity.*
 
 @Database(
     entities = [
-        StudentEntity::class,
+        UserEntity::class,
+        SoftwareEntity::class,
+        BatchEntity::class,
+        EnrollmentEntity::class,
         AttendanceEntity::class,
-        TimetableSlotEntity::class,
         AssignmentEntity::class,
+        AssignmentSubmissionEntity::class,
         ResultEntity::class,
         NoticeEntity::class,
-        EventEntity::class,
-        FacultyEntity::class,
-        NotificationEntity::class
+        EventEntity::class
     ],
     version = 1,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
 abstract class InstituteDatabase : RoomDatabase() {
-    abstract fun studentDao(): StudentDao
+    abstract fun userDao(): UserDao
+    abstract fun softwareDao(): SoftwareDao
+    abstract fun batchDao(): BatchDao
+    abstract fun enrollmentDao(): EnrollmentDao
     abstract fun attendanceDao(): AttendanceDao
-    abstract fun timetableSlotDao(): TimetableSlotDao
     abstract fun assignmentDao(): AssignmentDao
+    abstract fun assignmentSubmissionDao(): AssignmentSubmissionDao
     abstract fun resultDao(): ResultDao
     abstract fun noticeDao(): NoticeDao
     abstract fun eventDao(): EventDao
-    abstract fun facultyDao(): FacultyDao
-    abstract fun notificationDao(): NotificationDao
 }
