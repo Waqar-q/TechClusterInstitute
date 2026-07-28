@@ -11,9 +11,8 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -28,7 +27,7 @@ object DatabaseModule {
             "tech_cluster_institute.db"
         ).fallbackToDestructiveMigration().build()
 
-        CoroutineScope(Dispatchers.IO).launch {
+        runBlocking(Dispatchers.IO) {
             val seedRepo = SeedDataRepository(
                 db.userDao(), db.softwareDao(), db.batchDao(),
                 db.enrollmentDao(), db.attendanceDao()
