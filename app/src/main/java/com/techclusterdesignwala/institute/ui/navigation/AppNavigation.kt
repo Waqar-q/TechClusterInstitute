@@ -6,24 +6,24 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
-import com.techclusterdesignwala.institute.ui.assignments.AssignmentDetailScreen
+import com.techclusterdesignwala.institute.ui.admin.ManageBatchesScreen
+import com.techclusterdesignwala.institute.ui.admin.ManageSoftwareScreen
+import com.techclusterdesignwala.institute.ui.admin.ManageUsersScreen
 import com.techclusterdesignwala.institute.ui.assignments.AssignmentListScreen
 import com.techclusterdesignwala.institute.ui.attendance.AttendanceScreen
-import com.techclusterdesignwala.institute.ui.dashboard.DashboardScreen
+import com.techclusterdesignwala.institute.ui.auth.LoginScreen
+import com.techclusterdesignwala.institute.ui.dashboard.AdminDashboardScreen
+import com.techclusterdesignwala.institute.ui.dashboard.StudentDashboardScreen
+import com.techclusterdesignwala.institute.ui.dashboard.TeacherDashboardScreen
 import com.techclusterdesignwala.institute.ui.directory.DirectoryScreen
-import com.techclusterdesignwala.institute.ui.events.EventDetailScreen
 import com.techclusterdesignwala.institute.ui.events.EventsScreen
 import com.techclusterdesignwala.institute.ui.noticeboard.NoticeBoardScreen
-import com.techclusterdesignwala.institute.ui.noticeboard.NoticeDetailScreen
-import com.techclusterdesignwala.institute.ui.notifications.NotificationsScreen
 import com.techclusterdesignwala.institute.ui.results.ResultsScreen
-import com.techclusterdesignwala.institute.ui.timetable.TimetableScreen
+import com.techclusterdesignwala.institute.ui.theme.Navy800
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,28 +32,46 @@ fun AppNavigation() {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
-    val showBottomBar = Screen.bottomNavItems.any { screen ->
-        currentDestination?.hierarchy?.any { it.route == screen.route } == true
+    var currentUserRole by remember { mutableStateOf("") }
+    var currentUserId by remember { mutableStateOf(0L) }
+
+    val adminRoutes = listOf("admin_dashboard", "manage_users", "manage_software", "manage_batches", "directory")
+    val teacherRoutes = listOf("teacher_dashboard", "attendance", "assignments", "noticeboard")
+    val studentRoutes = listOf("student_dashboard", "attendance", "assignments", "results", "events")
+
+    val currentNav = when (currentUserRole) {
+        "ADMIN" -> adminRoutes
+        "TEACHER" -> teacherRoutes
+        "STUDENT" -> studentRoutes
+        else -> emptyList()
     }
+
+    val showBottomBar = currentDestination?.route?.let { currentNav.contains(it) } == true
 
     Scaffold(
         bottomBar = {
-            if (showBottomBar) {
+            if (showBottomBar && currentUserRole.isNotEmpty()) {
                 NavigationBar {
-                    Screen.bottomNavItems.forEach { screen ->
+                    val icons = when (currentUserRole) {
+                        "ADMIN" -> NavIcons.adminNav
+                        "TEACHER" -> NavIcons.teacherNav
+                        else -> NavIcons.studentNav
+                    }
+                    val routes = currentNav
+                    icons.forEachIndexed { index, (icon, title) ->
+                        val route = routes.getOrNull(index) ?: return@forEachIndexed
                         NavigationBarItem(
-                            icon = { Icon(screen.icon!!, contentDescription = screen.title) },
-                            label = { Text(screen.title) },
-                            selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
+                            icon = { Icon(icon, contentDescription = title) },
+                            label = { Text(title, style = MaterialTheme.typography.labelSmall) },
+                            selected = currentDestination?.hierarchy?.any { it.route == route } == true,
                             onClick = {
-                                navController.navigate(screen.route) {
-                                    popUpTo(navController.graph.findStartDestination().id) {
-                                        saveState = true
-                                    }
+                                navController.navigate(route) {
+                                    popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                                     launchSingleTop = true
                                     restoreState = true
                                 }
-                            }
+                            },
+                            colors = NavigationBarItemDefaults.colors(indicatorColor = Navy800.copy(alpha = 0.15f))
                         )
                     }
                 }
@@ -62,66 +80,50 @@ fun AppNavigation() {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = Screen.Dashboard.route,
+            startDestination = Screen.Login.route,
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable(Screen.Dashboard.route) {
-                DashboardScreen(
-                    onNavigateToNotifications = { navController.navigate(Screen.Notifications.route) },
-                    onNavigateToAttendance = { navController.navigate(Screen.Attendance.route) }
+            composable(Screen.Login.route) {
+                LoginScreen(
+                    onLoginSuccess = { role, userId ->
+                        currentUserRole = role
+                        currentUserId = userId
+                        val dest = when (role) {
+                            "ADMIN" -> "admin_dashboard"
+                            "TEACHER" -> "teacher_dashboard"
+                            else -> "student_dashboard"
+                        }
+                        navController.navigate(dest) {
+                            popUpTo(Screen.Login.route) { inclusive = true }
+                        }
+                    }
                 )
             }
-            composable(Screen.Attendance.route) {
-                AttendanceScreen()
-            }
-            composable(Screen.Timetable.route) {
-                TimetableScreen()
-            }
-            composable(Screen.Assignments.route) {
-                AssignmentListScreen(
-                    onAssignmentClick = { id -> navController.navigate(Screen.AssignmentDetail.createRoute(id)) }
-                )
-            }
-            composable(
-                route = Screen.AssignmentDetail.route,
-                arguments = listOf(navArgument("id") { type = NavType.LongType })
-            ) { backStackEntry ->
-                val id = backStackEntry.arguments?.getLong("id") ?: 0L
-                AssignmentDetailScreen(assignmentId = id, onBack = { navController.popBackStack() })
-            }
-            composable(Screen.Results.route) {
-                ResultsScreen()
-            }
-            composable(Screen.NoticeBoard.route) {
-                NoticeBoardScreen(
-                    onNoticeClick = { id -> navController.navigate(Screen.NoticeDetail.createRoute(id)) }
-                )
-            }
-            composable(
-                route = Screen.NoticeDetail.route,
-                arguments = listOf(navArgument("id") { type = NavType.LongType })
-            ) { backStackEntry ->
-                val id = backStackEntry.arguments?.getLong("id") ?: 0L
-                NoticeDetailScreen(noticeId = id, onBack = { navController.popBackStack() })
-            }
-            composable(Screen.Events.route) {
-                EventsScreen(
-                    onEventClick = { id -> navController.navigate(Screen.EventDetail.createRoute(id)) }
-                )
-            }
-            composable(
-                route = Screen.EventDetail.route,
-                arguments = listOf(navArgument("id") { type = NavType.LongType })
-            ) { backStackEntry ->
-                val id = backStackEntry.arguments?.getLong("id") ?: 0L
-                EventDetailScreen(eventId = id, onBack = { navController.popBackStack() })
-            }
-            composable(Screen.Directory.route) {
-                DirectoryScreen()
-            }
-            composable(Screen.Notifications.route) {
-                NotificationsScreen(onBack = { navController.popBackStack() })
-            }
+
+            composable("admin_dashboard") { AdminDashboardScreen(userId = currentUserId, onLogout = {
+                currentUserRole = ""; currentUserId = 0L
+                navController.navigate(Screen.Login.route) { popUpTo(0) { inclusive = true } }
+            })}
+            composable("manage_users") { ManageUsersScreen() }
+            composable("manage_software") { ManageSoftwareScreen() }
+            composable("manage_batches") { ManageBatchesScreen() }
+
+            composable("teacher_dashboard") { TeacherDashboardScreen(userId = currentUserId, onLogout = {
+                currentUserRole = ""; currentUserId = 0L
+                navController.navigate(Screen.Login.route) { popUpTo(0) { inclusive = true } }
+            })}
+
+            composable("student_dashboard") { StudentDashboardScreen(userId = currentUserId, onLogout = {
+                currentUserRole = ""; currentUserId = 0L
+                navController.navigate(Screen.Login.route) { popUpTo(0) { inclusive = true } }
+            })}
+
+            composable("attendance") { AttendanceScreen(userId = currentUserId, userRole = currentUserRole) }
+            composable("assignments") { AssignmentListScreen(userId = currentUserId, userRole = currentUserRole) }
+            composable("results") { ResultsScreen(userId = currentUserId) }
+            composable("noticeboard") { NoticeBoardScreen() }
+            composable("events") { EventsScreen() }
+            composable("directory") { DirectoryScreen() }
         }
     }
 }
