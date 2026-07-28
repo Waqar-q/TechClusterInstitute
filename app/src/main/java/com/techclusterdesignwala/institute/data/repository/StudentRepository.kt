@@ -46,7 +46,7 @@ class StudentRepository @Inject constructor(
         )
     }
 
-    fun getResults(studentId: Long): Flow<List<ResultEntity>> = resultDao.getByStudent(studentId)
+    fun getResults(studentId: Long): Flow<List<ResultEntity>> = resultDao.getByStudent(studentId.toString())
 
     fun getPendingSubmissions(studentId: Long): Flow<Int> = assignmentSubmissionDao.getPendingCount(studentId)
 }

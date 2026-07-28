@@ -46,7 +46,7 @@ class ManageBatchesViewModel @Inject constructor(
         }
     }
 
-    fun showAddDialog() { _state.update { it.copy(showDialog = true, name = "", selectedSoftware = state.softwareList.firstOrNull()?.id ?: 0, selectedTeacher = state.teachers.firstOrNull()?.id ?: 0) } }
+    fun showAddDialog() { val s = _state.value; _state.update { it.copy(showDialog = true, name = "", selectedSoftware = s.softwareList.firstOrNull()?.id ?: 0, selectedTeacher = s.teachers.firstOrNull()?.id ?: 0) } }
     fun hideDialog() { _state.update { it.copy(showDialog = false) } }
     fun updateName(v: String) { _state.update { it.copy(name = v) } }
     fun updateSoftware(v: Long) { _state.update { it.copy(selectedSoftware = v) } }
